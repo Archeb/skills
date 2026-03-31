@@ -1,4 +1,5 @@
 import sagiri from 'sagiri';
+import fs from 'fs';
 
 const apiKey = process.env.SAUCENAO_API_KEY;
 
@@ -9,13 +10,18 @@ if (!apiKey) {
 const client = apiKey ? sagiri(apiKey) : null;
 
 const api = {
-    search: async (imageUrl: string): Promise<string> => {
+    search: async (imagePathOrUrl: string): Promise<string> => {
         if (!client) {
             return "[Error] 系统未能配置 SAUCENAO_API_KEY，无法调用反查引擎查找画师出处。你可以向用户反馈此配置问题。";
         }
         
         try {
-            const results = await client(imageUrl);
+            let fileData: string | Buffer = imagePathOrUrl;
+            if (!imagePathOrUrl.startsWith("http://") && !imagePathOrUrl.startsWith("https://")) {
+                fileData = fs.readFileSync(imagePathOrUrl);
+            }
+            
+            const results = await client(fileData);
             
             if (!results || results.length === 0) {
                 return "未能在 SauceNAO 的数据库里找到匹配的画师或该图出处。";
