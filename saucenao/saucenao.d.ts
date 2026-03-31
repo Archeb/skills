@@ -1,16 +1,55 @@
 /**
- * saucenao.d.ts — 原版插画及画师溯源引擎 (Sagiri Wrapper)
+ * saucenao.d.ts — SauceNAO 以图搜图引擎（sagiri）
+ *
+ * 通过图片反向搜索原画师、作品来源及社交媒体链接。
+ * 已预初始化，直接调用即可。传入 URL 字符串或本地文件的 Buffer。
  */
-declare const saucenao: {
-    /**
-     * 通过图片（支持本地路径或公开网址）在全网原画图库中反向搜索原画师、作品名及社交媒体原始链接。
-     * 
-     * @param imagePathOrUrl 需要反查的插画的本地绝对文件物理路径或公开网络图片 URL。
-     * @returns [string] 查找到的源网页作者、对应网站 URL 解析列表等高度结构化总结数据。
-     * 
-     * @example
-     * const resultData = await saucenao.search("http://example.com/anime-girl-unknown.jpg");
-     * console.log(resultData);
-     */
-    search(imagePathOrUrl: string): Promise<string>;
-};
+
+interface SaucenaoResult {
+    url: string;
+    site: string;
+    index: number;
+    similarity: number;
+    thumbnail: string;
+    authorName: string;
+    authorUrl: string;
+    raw: {
+        data: {
+            ext_urls: string[];
+            title: string;
+            author_name: string;
+            author_url: string;
+            pixiv_id?: string;
+            member_id?: string;
+            member_name?: string;
+            twitter_user_handle?: string;
+            source?: string;
+        };
+        header: {
+            index_id: string;
+            index_name: string;
+            similarity: number;
+            thumbnail: string;
+        };
+    };
+}
+
+/**
+ * 传入图片的公开 URL 或 Buffer，返回匹配结果数组。
+ * 如果 SAUCENAO_API_KEY 未配置则为 null。
+ *
+ * @param file 图片的公开 URL 字符串，或通过 fs.readFileSync() 读取的本地文件 Buffer。
+ * @returns 按相似度排序的匹配结果数组
+ *
+ * @example
+ * // 使用 URL
+ * const results = await saucenao("https://example.com/image.jpg");
+ * console.log(results[0].authorName, results[0].url, results[0].similarity);
+ *
+ * @example
+ * // 使用本地文件
+ * import fs from "fs";
+ * const buf = fs.readFileSync("/path/to/local/image.png");
+ * const results = await saucenao(buf);
+ */
+declare const saucenao: ((file: string | Buffer) => Promise<SaucenaoResult[]>) | null;
